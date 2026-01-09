@@ -4,21 +4,19 @@
     <meta charset="UTF-8">
     <title>Enterprise Doc Converter - 표준화 센터</title>
     <style>
-        :root { --primary: #0078d4; --bg: #f3f2f1; --white: #ffffff; --warning: #fff2f2; }
-        body { font-family: 'Segoe UI', 'Malgun Gothic', sans-serif; background: var(--bg); margin: 0; padding: 20px; }
+        :root { --primary: #0078d4; --bg: #f3f2f1; --white: #ffffff; --warn: #fff2f2; }
+        body { font-family: 'Malgun Gothic', sans-serif; background: var(--bg); padding: 20px; margin: 0; }
         .container { max-width: 900px; margin: auto; background: var(--white); padding: 30px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
-        .header { border-bottom: 2px solid var(--primary); margin-bottom: 20px; padding-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
-        .guide-box { background: var(--warning); border: 1px solid #ff8c8c; padding: 15px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem; line-height: 1.6; }
-        .section { margin-bottom: 25px; padding: 15px; border: 1px solid #e1dfdd; border-radius: 8px; }
+        .header { border-bottom: 2px solid var(--primary); margin-bottom: 20px; padding-bottom: 10px; display: flex; justify-content: space-between; }
+        .guide { background: var(--warn); border: 1px solid #ff8c8c; padding: 15px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem; line-height: 1.6; }
+        .section { border: 1px solid #e1dfdd; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
         .btn { padding: 10px 20px; background: var(--primary); color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
         .btn-run { background: #107c10; width: 100%; font-size: 1.2rem; margin-top: 10px; }
         .btn:disabled { background: #c8c6c4; cursor: not-allowed; }
         .file-list { max-height: 200px; overflow-y: auto; background: #faf9f8; padding: 10px; border: 1px solid #edebe9; border-radius: 4px; font-size: 0.85rem; margin-top: 10px; }
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th, td { padding: 10px; border: 1px solid #edebe9; text-align: left; font-size: 0.9rem; }
+        th, td { padding: 10px; border: 1px solid #edebe9; text-align: left; }
         th { background: #f3f2f1; }
-        .status-success { color: #107c10; font-weight: bold; }
-        .status-fail { color: #a4262c; font-weight: bold; }
         .hidden { display: none; }
     </style>
 </head>
@@ -26,7 +24,7 @@
     <div id="login" class="container" style="max-width: 400px; margin-top: 100px; text-align: center;">
         <h2>🔐 시스템 접속</h2>
         <input type="password" id="pw" style="width:100%; padding:12px; margin:20px 0; border:1px solid #ddd; border-radius:6px;" placeholder="비밀번호 입력">
-        <button class="btn" style="width:100%" onclick="checkAuth()">인증 및 접속</button>
+        <button class="btn" style="width:100%" onclick="checkAuth()">접속</button>
     </div>
 
     <div id="app" class="container hidden">
@@ -38,11 +36,11 @@
             </div>
         </div>
 
-        <div class="guide-box">
+        <div class="guide">
             <strong>⚠️ 긴급 조치 가이드</strong><br>
-            1. 다운로드한 두 파일을 <code>C:\PPT_WORK</code> 폴더에 넣으세요.<br>
-            2. <code>서버실행.bat</code>을 <strong>마우스 우클릭 -> 관리자 권한으로 실행</strong>하세요.<br>
-            3. 브라우저 주소창 왼쪽 <strong>[자물쇠 아이콘] -> [사이트 설정] -> [비안전 콘텐츠] -> [허용]</strong> 설정 필수!
+            1. 다운로드한 두 파일을 <code>C:\PPT_WORK</code>에 넣으세요.<br>
+            2. <strong>서버실행.bat</strong>을 실행해 검은 창이 떠 있어야 합니다.<br>
+            3. 주소창 왼쪽 <strong>[자물쇠] -> [사이트 설정] -> [비안전 콘텐츠] -> [허용]</strong> 설정 후 새로고침!
         </div>
 
         <div class="section">
@@ -51,24 +49,17 @@
                 <button class="btn" onclick="api('select-source')">원본 폴더 선택</button>
                 <span id="src-path" style="margin-left:10px; color:#666;">(미선택)</span>
             </div>
-            <div id="file-count" style="font-weight:bold;">대상 파일: 0건</div>
-            <div class="file-list" id="file-display">목록이 여기에 표시됩니다.</div>
-            
-            <div style="margin: 20px 0 10px 0;">
-                <button class="btn" onclick="api('select-dest')">저장 폴더 선택</button>
-                <span id="dst-path" style="margin-left:10px; color:#666;">(미선택)</span>
-            </div>
+            <div class="file-list" id="file-display">변환 대상을 확인하세요.</div>
+            <button class="btn" style="margin-top:10px;" onclick="api('select-dest')">저장 폴더 선택</button>
+            <span id="dst-path" style="margin-left:10px; color:#666;">(미선택)</span>
         </div>
 
         <button id="run-btn" class="btn btn-run" onclick="api('convert')" disabled>4. 변환 시작</button>
 
-        <div class="section" style="margin-top:20px;">
-            <strong>5. 변환 결과 리포트</strong>
-            <table id="result-table">
-                <thead><tr><th>파일명</th><th>상태</th><th>메시지</th></tr></thead>
-                <tbody><tr><td colspan="3" style="text-align:center;">대기 중</td></tr></tbody>
-            </table>
-        </div>
+        <table id="result-table">
+            <thead><tr><th>파일명</th><th>상태</th><th>결과</th></tr></thead>
+            <tbody><tr><td colspan="3" style="text-align:center;">대기 중</td></tr></tbody>
+        </table>
     </div>
 
     <script>
@@ -78,115 +69,72 @@
             if(document.getElementById('pw').value === "sd*11070823") {
                 document.getElementById('login').classList.add('hidden');
                 document.getElementById('app').classList.remove('hidden');
-            } else { alert("비밀번호 오류"); }
+            } else { alert("오류"); }
         }
 
         function downloadBridge() {
-            // 줄바꿈과 구조를 완벽히 유지한 멀티라인 문자열
-            const psCode = `$OutputEncoding = [System.Text.Encoding]::UTF8
-$listener = New-Object System.Net.HttpListener
-$listener.Prefixes.Add("http://localhost:8080/")
-try {
-    $listener.Start()
-} catch {
-    Write-Host "오류: 8080 포트가 사용 중입니다." -ForegroundColor Red
-    exit
-}
-
-$srcPath = ""
-$dstPath = ""
-Write-Host ""
-Write-Host ">>> 로컬 엔진 가동 중 (창을 닫지 마세요) <<<" -ForegroundColor Cyan
-
-while ($listener.IsListening) {
-    $context = $listener.GetContext()
-    $res = $context.Response
-    $res.Headers.Add("Access-Control-Allow-Origin", "*")
-    $url = $context.Request.Url.AbsolutePath
-    $buffer = [System.Text.Encoding]::UTF8.GetBytes("{}")
-
-    if ($url -eq "/select-source") {
-        Add-Type -AssemblyName System.Windows.Forms
-        $f = New-Object System.Windows.Forms.FolderBrowserDialog
-        if ($f.ShowDialog() -eq "OK") {
-            $srcPath = $f.SelectedPath
-            $files = Get-ChildItem -LiteralPath $srcPath -Include *.ppt, *.pptx, *.hwp, *.hwpx -File | Select-Object -ExpandProperty Name
-            $json = @{ path = $srcPath; files = $files } | ConvertTo-Json
-            $buffer = [System.Text.Encoding]::UTF8.GetBytes($json)
-        }
-    }
-    elseif ($url -eq "/select-dest") {
-        $f = New-Object System.Windows.Forms.FolderBrowserDialog
-        if ($f.ShowDialog() -eq "OK") {
-            $dstPath = $f.SelectedPath
-            $json = @{ path = $dstPath } | ConvertTo-Json
-            $buffer = [System.Text.Encoding]::UTF8.GetBytes($json)
-        }
-    }
-    elseif ($url -eq "/convert") {
-        $pp = New-Object -ComObject PowerPoint.Application
-        $hwp = New-Object -ComObject HWPFrame.HwpObject
-        $results = @()
-        $items = Get-ChildItem -LiteralPath $srcPath -Include *.ppt, *.pptx, *.hwp, *.hwpx -File
-        foreach ($item in $items) {
-            try {
-                $outPath = [System.IO.Path]::Combine($dstPath, [System.IO.Path]::ChangeExtension($item.Name, ".pdf"))
-                if ($item.Extension -match "ppt") {
-                    $p = $pp.Presentations.Open($item.FullName, -1, 0, 0)
-                    $p.SaveAs($outPath, 32)
-                    $p.Close()
-                } else {
-                    $hwp.Open($item.FullName, "HWP", "forceopen:true")
-                    $hwp.SaveAs($outPath, "PDF")
-                    $hwp.Clear(1)
-                }
-                $results += @{ name = $item.Name; status = "성공"; msg = "완료" }
-            } catch {
-                $results += @{ name = $item.Name; status = "실패"; msg = $_.Exception.Message }
-            }
-        }
-        $pp.Quit(); $hwp.Quit()
-        $buffer = [System.Text.Encoding]::UTF8.GetBytes(($results | ConvertTo-Json))
-    }
-    $res.ContentType = "application/json; charset=utf-8"
-    $res.OutputStream.Write($buffer, 0, $buffer.Length)
-    $res.Close()
-}`;
-            const blob = new Blob(["\ufeff", psCode], { type: 'text/plain;charset=utf-8' });
+            // 줄바꿈 \n을 명시적으로 포함하여 구문 파괴 방지
+            const ps = [
+                "$OutputEncoding = [System.Text.Encoding]::UTF8",
+                "$l = New-Object System.Net.HttpListener",
+                "$l.Prefixes.Add('http://localhost:8080/')",
+                "try { $l.Start() } catch { Write-Host '8080 포트 충돌' -FG Red; exit }",
+                "$s=''; $d=''",
+                "Write-Host '>>> 로컬 엔진 가동 중 <<<' -FG Cyan",
+                "while($l.IsListening) {",
+                "  $c = $l.GetContext(); $res = $c.Response; $res.Headers.Add('Access-Control-Allow-Origin','*')",
+                "  $url = $c.Request.Url.AbsolutePath; $buf = [System.Text.Encoding]::UTF8.GetBytes('{}')",
+                "  if($url -eq '/select-source') {",
+                "    Add-Type -AssemblyName System.Windows.Forms; $f = New-Object System.Windows.Forms.FolderBrowserDialog",
+                "    if($f.ShowDialog() -eq 'OK') {",
+                "      $s = $f.SelectedPath; $fs = Get-ChildItem -LiteralPath $s -Include *.ppt,*.pptx,*.hwp,*.hwpx -File | Select-Object -ExpandProperty Name",
+                "      $buf = [System.Text.Encoding]::UTF8.GetBytes((@{path=$s;files=$fs} | ConvertTo-Json))",
+                "    }",
+                "  } elseif($url -eq '/select-dest') {",
+                "    $f = New-Object System.Windows.Forms.FolderBrowserDialog",
+                "    if($f.ShowDialog() -eq 'OK') { $d = $f.SelectedPath; $buf = [System.Text.Encoding]::UTF8.GetBytes((@{path=$d} | ConvertTo-Json)) }",
+                "  } elseif($url -eq '/convert') {",
+                "    $p = New-Object -ComObject PowerPoint.Application; $h = New-Object -ComObject HWPFrame.HwpObject; $rs = @()",
+                "    Get-ChildItem -LiteralPath $s -Include *.ppt,*.pptx,*.hwp,*.hwpx -File | % {",
+                "      try {",
+                "        $o = [System.IO.Path]::Combine($d, [System.IO.Path]::ChangeExtension($_.Name, '.pdf'))",
+                "        if($_.Extension -match 'ppt') { $m=$p.Presentations.Open($_.FullName,-1,0,0); $m.SaveAs($o,32); $m.Close() }",
+                "        else { $h.Open($_.FullName,'HWP','forceopen:true'); $h.SaveAs($o,'PDF'); $h.Clear(1) }",
+                "        $rs += @{name=$_.Name;status='성공';msg='완료'}",
+                "      } catch { $rs += @{name=$_.Name;status='실패';msg=$_.Exception.Message} }",
+                "    }; $p.Quit(); $h.Quit(); $buf = [System.Text.Encoding]::UTF8.GetBytes(($rs | ConvertTo-Json))",
+                "  }",
+                "  $res.ContentType='application/json; charset=utf-8'; $res.OutputStream.Write($buf,0,$buf.Length); $res.Close()",
+                "}"
+            ].join('\n');
+            const blob = new Blob(["\ufeff", ps], { type: 'text/plain;charset=utf-8' });
             save(blob, "Bridge_Server.ps1");
         }
 
         function downloadBatch() {
-            // 배치 파일 명령어의 무결성 확보
-            const batCode = `@echo off\r\npushd "%~dp0"\r\npowershell -NoExit -ExecutionPolicy Bypass -File "Bridge_Server.ps1"\r\npause`;
-            const blob = new Blob([batCode], { type: 'application/octet-stream' });
+            const bat = "@echo off\r\npushd \"%~dp0\"\r\npowershell -NoExit -ExecutionPolicy Bypass -File \"Bridge_Server.ps1\"\r\npause";
+            const blob = new Blob([bat], { type: 'application/octet-stream' });
             save(blob, "서버실행.bat");
         }
 
-        function save(blob, name) {
-            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; a.click();
-        }
+        function save(b, n) { const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = n; a.click(); }
 
-        async function api(endpoint) {
+        async function api(e) {
             try {
-                const res = await fetch(`${API_URL}/${endpoint}`);
-                const data = await res.json();
-                if(endpoint === 'select-source') {
-                    document.getElementById('src-path').innerText = data.path;
-                    document.getElementById('file-count').innerText = `대상 파일: ${data.files.length}건`;
-                    document.getElementById('file-display').innerHTML = data.files.join('<br>');
-                    if(data.files.length > 0) document.getElementById('run-btn').disabled = false;
-                } else if(endpoint === 'select-dest') {
-                    document.getElementById('dst-path').innerText = data.path;
-                } else if(endpoint === 'convert') {
-                    renderTable(data);
-                }
-            } catch { alert("엔진 연결 실패! 가이드 2, 3번을 다시 확인하세요."); }
+                const r = await fetch(`${API_URL}/${e}`);
+                const d = await r.json();
+                if(e==='select-source') {
+                    document.getElementById('src-path').innerText = d.path;
+                    document.getElementById('file-display').innerHTML = d.files.join('<br>');
+                    if(d.files.length > 0) document.getElementById('run-btn').disabled = false;
+                } else if(e==='select-dest') { document.getElementById('dst-path').innerText = d.path; }
+                else if(e==='convert') { render(d); }
+            } catch { alert("엔진 연결 실패! 가이드를 확인하세요."); }
         }
 
-        function renderTable(res) {
-            const body = document.querySelector("#result-table tbody");
-            body.innerHTML = res.map(r => `<tr><td>${r.name}</td><td class="${r.status==='성공'?'status-success':'status-fail'}">${r.status}</td><td>${r.msg}</td></tr>`).join('');
+        function render(res) {
+            const b = document.querySelector("#result-table tbody");
+            b.innerHTML = res.map(r => `<tr><td>${r.name}</td><td>${r.status}</td><td>${r.msg}</td></tr>`).join('');
         }
     </script>
 </body>
