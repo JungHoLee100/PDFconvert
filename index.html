@@ -2,19 +2,20 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>Enterprise Doc Standardizer (Fixed Path)</title>
+    <title>Enterprise Doc Standardizer v1.1</title>
     <style>
         :root { --primary: #0078d4; --bg: #f3f2f1; --white: #ffffff; }
         body { font-family: 'Segoe UI', 'Malgun Gothic', sans-serif; background: var(--bg); padding: 20px; margin: 0; }
-        .container { max-width: 800px; margin: auto; background: var(--white); padding: 30px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .container { max-width: 850px; margin: auto; background: var(--white); padding: 30px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
         .header { border-bottom: 2px solid var(--primary); margin-bottom: 20px; padding-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
-        .path-info { background: #fff9e6; border: 1px solid #ffcc00; padding: 15px; border-radius: 8px; margin-bottom: 20px; font-size: 0.95rem; line-height: 1.8; }
-        .btn { padding: 12px 24px; background: var(--primary); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 1rem; }
-        .btn-run { background: #107c10; width: 100%; height: 50px; margin-bottom: 20px; }
-        .btn-run:disabled { background: #c8c6c4; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .path-box { background: #fff9e6; border: 1px solid #ffcc00; padding: 15px; border-radius: 8px; margin-bottom: 20px; font-size: 0.95rem; line-height: 1.8; }
+        .btn { padding: 12px 24px; background: var(--primary); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .btn-download { background: #5c2d91; font-size: 0.85rem; margin-left: 5px; }
+        .btn-run { background: #107c10; width: 100%; height: 55px; font-size: 1.2rem; margin-bottom: 25px; }
+        .btn:disabled { background: #c8c6c4; cursor: not-allowed; }
+        table { width: 100%; border-collapse: collapse; }
         th, td { padding: 12px; border: 1px solid #edebe9; text-align: left; }
-        th { background: #f3f2f1; font-weight: 600; }
+        th { background: #f3f2f1; }
         .status-success { color: #107c10; font-weight: bold; }
         .status-fail { color: #a4262c; font-weight: bold; }
         code { background: #eee; padding: 2px 5px; border-radius: 4px; color: #d13438; font-weight: bold; }
@@ -30,25 +31,29 @@
 
     <div id="app" class="container hidden">
         <div class="header">
-            <h2>🚀 문서 변환 자동화 시스템</h2>
-            <button class="btn" style="background:#5c2d91; font-size: 0.8rem;" onclick="downloadBridge()">엔진 다운로드</button>
+            <h2>🚀 문서 변환 자동화 센터</h2>
+            <div>
+                <button class="btn btn-download" onclick="downloadBridge()">1. 엔진(.ps1)</button>
+                <button class="btn btn-download" onclick="downloadBatch()">2. 실행기(.bat)</button>
+            </div>
         </div>
 
-        <div class="path-info">
-            <strong>📂 작업 경로 안내 (고정됨)</strong><br>
-            • 원본 위치: <code>C:\ppt_work</code> 에 파일을 넣으세요.<br>
-            • 변환 결과: <code>C:\ppt_work\pdf</code> 폴더에 생성됩니다.
+        <div class="path-box">
+            <strong>📂 표준 작업 가이드</strong><br>
+            • 원본 폴더: <code>C:\ppt_work</code> (변환할 파일을 여기에 넣으세요)<br>
+            • 결과 폴더: <code>C:\ppt_work\pdf</code> (변환된 파일이 저장됩니다)<br>
+            • <strong>자동 스킵:</strong> 문서 외 파일(.ps1, .bat 등)은 자동으로 제외됩니다.
         </div>
 
-        <button id="run-btn" class="btn btn-run" onclick="runConversion()">변환 작업 시작</button>
+        <button id="run-btn" class="btn btn-run" onclick="runConversion()">변환 작업 실행 (PDF 생성)</button>
 
-        <div style="font-weight: bold; margin-bottom: 10px;">📊 변환 결과 리포트</div>
+        <div style="font-weight: bold; margin-bottom: 10px;">📊 실시간 변환 리포트</div>
         <table id="result-table">
             <thead>
                 <tr><th>파일명</th><th>상태</th><th>상세 결과</th></tr>
             </thead>
             <tbody>
-                <tr><td colspan="3" style="text-align:center; color:#999;">작업을 대기 중입니다.</td></tr>
+                <tr><td colspan="3" style="text-align:center; color:#999;">작업 대기 중...</td></tr>
             </tbody>
         </table>
     </div>
@@ -60,60 +65,88 @@
             if(document.getElementById('pw').value === "sd*11070823") {
                 document.getElementById('login').classList.add('hidden');
                 document.getElementById('app').classList.remove('hidden');
-            } else { alert("비밀번호 불일치"); }
+            } else { alert("비밀번호가 일치하지 않습니다."); }
         }
 
         function downloadBridge() {
             const ps = [
                 "$OutputEncoding = [System.Text.Encoding]::UTF8",
-                "$l = New-Object System.Net.HttpListener",
-                "$l.Prefixes.Add('http://localhost:8080/')",
-                "try { $l.Start() } catch { Write-Host '포트 충돌' -FG Red; exit }",
-                "$s = 'C:\\ppt_work'",
-                "$d = 'C:\\ppt_work\\pdf'",
-                "if (!(Test-Path $d)) { New-Item -ItemType Directory -Path $d }",
-                "Write-Host '>>> 문서 변환 엔진 가동 중 <<<' -FG Cyan",
+                "$l = New-Object System.Net.HttpListener; $l.Prefixes.Add('http://localhost:8080/')",
+                "try { $l.Start() } catch { Write-Host '[오류] 8080 포트 충돌' -FG Red; exit }",
+                "$s = 'C:\\ppt_work'; $d = 'C:\\ppt_work\\pdf'",
+                "if (!(Test-Path $d)) { New-Item -ItemType Directory -Path $d | Out-Null }",
+                "Write-Host '`n==========================================' -FG Cyan",
+                "Write-Host '>>> 문서 변환 엔진 가동 중 (창 고정) <<<' -FG Cyan",
+                "Write-Host '==========================================' -FG Cyan",
                 "while($l.IsListening) {",
                 "  $c = $l.GetContext(); $res = $c.Response; $res.Headers.Add('Access-Control-Allow-Origin','*')",
                 "  if($c.Request.Url.AbsolutePath -eq '/convert') {",
-                "    $p = New-Object -ComObject PowerPoint.Application; $h = New-Object -ComObject HWPFrame.HwpObject; $rs = @()",
-                "    $items = Get-ChildItem -LiteralPath $s -Include *.ppt,*.pptx,*.hwp,*.hwpx -File",
-                "    foreach($i in $items) {",
-                "      try {",
-                "        $o = Join-Path $d ([System.IO.Path]::ChangeExtension($i.Name, '.pdf'))",
-                "        if($i.Extension -match 'ppt') { $m=$p.Presentations.Open($i.FullName,-1,0,0); $m.SaveAs($o,32); $m.Close() }",
-                "        else { $h.Open($i.FullName,'HWP','forceopen:true'); $h.SaveAs($o,'PDF'); $h.Clear(1) }",
-                "        $rs += @{name=$i.Name;status='성공';msg='완료'}",
-                "      } catch { $rs += @{name=$i.Name;status='실패';msg=$_.Exception.Message} }",
-                "    }",
-                "    $p.Quit(); $h.Quit(); $buf = [System.Text.Encoding]::UTF8.GetBytes(($rs | ConvertTo-Json))",
+                "    Write-Host \"`n[신호 수신] 변환 요청 ($((Get-Date).ToString('HH:mm:ss')))\" -FG Yellow",
+                "    $rs = @()",
+                "    # [수정] 필터링을 강화하여 문서 파일만 명확히 추출",
+                "    $items = Get-ChildItem -LiteralPath $s -File | Where-Object { $_.Extension -match 'ppt|pptx|hwp|hwpx' }",
+                "    if($items.Count -gt 0) {",
+                "       Write-Host \"  -> 총 $($items.Count)개 문서 파일 발견 (비문서는 제외됨)\" -FG White",
+                "       $pp = New-Object -ComObject PowerPoint.Application; $hwp = New-Object -ComObject HWPFrame.HwpObject",
+                "       foreach($i in $items) {",
+                "         try {",
+                "           $o = [System.IO.Path]::Combine($d, [System.IO.Path]::ChangeExtension($i.Name, '.pdf'))",
+                "           if($i.Extension -match 'ppt') {",
+                "             $m=$pp.Presentations.Open($i.FullName,-1,0,0); $m.SaveAs($o,32); $m.Close()",
+                "           } else {",
+                "             $hwp.Open($i.FullName,'HWP','forceopen:true'); $hwp.SaveAs($o,'PDF'); $hwp.Clear(1)",
+                "           }",
+                "           $rs += @{name=$i.Name; status='성공'; msg='완료'}",
+                "           Write-Host \"     [완료] $($i.Name)\" -FG Gray",
+                "         } catch {",
+                "           $rs += @{name=$i.Name; status='실패'; msg=$_.Exception.Message}",
+                "           Write-Host \"     [실패] $($i.Name)\" -FG Red",
+                "         }",
+                "       }",
+                "       $pp.Quit(); $hwp.Quit()",
+                "    } else { Write-Host '  ! 변환할 대상 파일(.ppt, .hwp)이 없습니다.' -FG Magenta }",
+                "    $json = @($rs) | ConvertTo-Json",
+                "    $buf = [System.Text.Encoding]::UTF8.GetBytes($json)",
                 "    $res.ContentType='application/json; charset=utf-8'; $res.OutputStream.Write($buf,0,$buf.Length)",
+                "    Write-Host '[응답 전송] 웹 리포트 전송 완료.' -FG Cyan",
                 "  }",
                 "  $res.Close()",
                 "}"
             ].join('\n');
-            const blob = new Blob(["\ufeff", ps], { type: 'text/plain;charset=utf-8' });
-            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = "Bridge_Server.ps1"; a.click();
+            saveBlob(new Blob(["\ufeff", ps], { type: 'text/plain;charset=utf-8' }), "Bridge_Server.ps1");
+        }
+
+        function downloadBatch() {
+            const bat = "@echo off\r\nchcp 65001 > nul\r\npushd \"%~dp0\"\r\ntitle 문서 변환기 실행기\r\necho 엔진을 가동합니다...\r\npowershell -NoExit -ExecutionPolicy Bypass -File \"Bridge_Server.ps1\"\r\npause";
+            saveBlob(new Blob([bat], { type: 'application/octet-stream' }), "서버실행.bat");
+        }
+
+        function saveBlob(blob, name) {
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; a.click();
         }
 
         async function runConversion() {
             const btn = document.getElementById('run-btn');
             const tbody = document.querySelector("#result-table tbody");
-            
             btn.disabled = true;
-            tbody.innerHTML = "<tr><td colspan='3' style='text-align:center;'>변환 중... 잠시만 기다려 주세요.</td></tr>";
+            tbody.innerHTML = "<tr><td colspan='3' style='text-align:center;'>🔄 변환 진행 중... (파워쉘 창을 확인하세요)</td></tr>";
 
             try {
                 const res = await fetch(`${API_URL}/convert`);
                 const results = await res.json();
-                tbody.innerHTML = results.map(r => `<tr>
-                    <td>${r.name}</td>
-                    <td class="${r.status === '성공' ? 'status-success' : 'status-fail'}">${r.status}</td>
-                    <td>${r.msg}</td>
-                </tr>`).join('');
+                const data = Array.isArray(results) ? results : (results ? [results] : []);
+                
+                if (data.length === 0) {
+                    tbody.innerHTML = "<tr><td colspan='3' style='text-align:center;'>대상 문서 파일이 없습니다.</td></tr>";
+                } else {
+                    tbody.innerHTML = data.map(r => `<tr>
+                        <td>${r.name}</td>
+                        <td class="${r.status === '성공' ? 'status-success' : 'status-fail'}">${r.status}</td>
+                        <td>${r.msg}</td>
+                    </tr>`).join('');
+                }
             } catch (e) {
-                alert("엔진 연결 실패! Bridge_Server.ps1이 실행 중인지, 브라우저 보안 설정(비안전 콘텐츠 허용)을 마쳤는지 확인하세요.");
-                tbody.innerHTML = "<tr><td colspan='3' style='text-align:center; color:red;'>연결 실패</td></tr>";
+                tbody.innerHTML = "<tr><td colspan='3' style='text-align:center; color:red;'>⚠️ 엔진 응답 없음.</td></tr>";
             } finally {
                 btn.disabled = false;
             }
