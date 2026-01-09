@@ -2,26 +2,24 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>상품시스템 산출물 표준화 센터</title>
+    <title>Enterprise Doc Converter - 표준화 센터</title>
     <style>
-        :root { --primary: #0078d4; --bg: #f3f2f1; --white: #ffffff; --warning: #fff2f2; --accent: #5c2d91; }
+        :root { --primary: #0078d4; --bg: #f3f2f1; --white: #ffffff; --warning: #fff2f2; }
         body { font-family: 'Segoe UI', 'Malgun Gothic', sans-serif; background: var(--bg); margin: 0; padding: 20px; }
-        .container { max-width: 950px; margin: auto; background: var(--white); padding: 30px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .container { max-width: 900px; margin: auto; background: var(--white); padding: 30px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
         .header { border-bottom: 2px solid var(--primary); margin-bottom: 20px; padding-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
-        .guide-section { background: var(--warning); border: 1px solid #ff8c8c; padding: 20px; border-radius: 8px; margin-bottom: 25px; }
-        .section { margin-bottom: 25px; padding: 20px; border: 1px solid #e1dfdd; border-radius: 8px; }
+        .guide-box { background: var(--warning); border: 1px solid #ff8c8c; padding: 15px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem; line-height: 1.6; }
+        .section { margin-bottom: 25px; padding: 15px; border: 1px solid #e1dfdd; border-radius: 8px; }
         .btn { padding: 10px 20px; background: var(--primary); color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
-        .btn-accent { background: var(--accent); }
         .btn-run { background: #107c10; width: 100%; font-size: 1.2rem; margin-top: 10px; }
         .btn:disabled { background: #c8c6c4; cursor: not-allowed; }
-        .file-list { max-height: 200px; overflow-y: auto; background: #faf9f8; padding: 10px; border: 1px solid #edebe9; border-radius: 4px; font-size: 0.9rem; margin-top: 10px; line-height: 1.6; }
+        .file-list { max-height: 200px; overflow-y: auto; background: #faf9f8; padding: 10px; border: 1px solid #edebe9; border-radius: 4px; font-size: 0.85rem; margin-top: 10px; }
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th, td { padding: 12px; border: 1px solid #edebe9; text-align: left; }
+        th, td { padding: 10px; border: 1px solid #edebe9; text-align: left; font-size: 0.9rem; }
         th { background: #f3f2f1; }
         .status-success { color: #107c10; font-weight: bold; }
         .status-fail { color: #a4262c; font-weight: bold; }
         .hidden { display: none; }
-        code { background: #eee; padding: 2px 5px; border-radius: 4px; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -35,28 +33,26 @@
         <div class="header">
             <h2>🚀 문서 변환 통합 제어 센터</h2>
             <div>
-                <button class="btn btn-accent" onclick="downloadBridge()">1. 엔진(.ps1) 다운로드</button>
-                <button class="btn btn-accent" onclick="downloadBatch()">2. 실행기(.bat) 다운로드</button>
+                <button class="btn" style="background:#5c2d91;" onclick="downloadBridge()">1. 엔진(.ps1) 다운로드</button>
+                <button class="btn" style="background:#5c2d91;" onclick="downloadBatch()">2. 실행기(.bat) 다운로드</button>
             </div>
         </div>
 
-        <div class="guide-section">
-            <strong>⚠️ 처음 사용 시 필수 체크 (실수 방지 가이드)</strong>
-            <ul style="font-size: 0.9rem; margin-top: 10px; padding-left: 20px;">
-                <li>위 1번, 2번 파일을 다운로드하여 <strong>반드시 같은 폴더</strong>(예: <code>C:\jhlee</code>)에 넣으세요.</li>
-                <li><strong>실행:</strong> <code>서버실행.bat</code>을 더블 클릭하여 검은 창이 떠 있는 상태를 유지하세요.</li>
-                <li><strong>보안:</strong> 주소창 왼쪽 <strong>[자물쇠 아이콘] → [사이트 설정] → [비안전 콘텐츠] → [허용]</strong> 후 새로고침(F5) 하세요.</li>
-            </ul>
+        <div class="guide-box">
+            <strong>⚠️ 긴급 조치 가이드</strong><br>
+            1. 다운로드한 두 파일을 <code>C:\PPT_WORK</code> 폴더에 넣으세요.<br>
+            2. <code>서버실행.bat</code>을 <strong>마우스 우클릭 -> 관리자 권한으로 실행</strong>하세요.<br>
+            3. 브라우저 주소창 왼쪽 <strong>[자물쇠 아이콘] -> [사이트 설정] -> [비안전 콘텐츠] -> [허용]</strong> 설정 필수!
         </div>
 
         <div class="section">
-            <strong>3. 변환 대상 및 경로 설정</strong>
-            <div style="margin: 15px 0;">
+            <strong>3. 경로 및 리스트 확인</strong>
+            <div style="margin: 10px 0;">
                 <button class="btn" onclick="api('select-source')">원본 폴더 선택</button>
                 <span id="src-path" style="margin-left:10px; color:#666;">(미선택)</span>
             </div>
-            <div id="file-count" style="font-weight:bold;">대상 파일 리스트: 0건</div>
-            <div class="file-list" id="file-display">폴더를 선택하면 여기에 파일 목록이 표시됩니다.</div>
+            <div id="file-count" style="font-weight:bold;">대상 파일: 0건</div>
+            <div class="file-list" id="file-display">목록이 여기에 표시됩니다.</div>
             
             <div style="margin: 20px 0 10px 0;">
                 <button class="btn" onclick="api('select-dest')">저장 폴더 선택</button>
@@ -64,13 +60,13 @@
             </div>
         </div>
 
-        <button id="run-btn" class="btn btn-run" onclick="api('convert')" disabled>4. 변환 작업 실행 시작</button>
+        <button id="run-btn" class="btn btn-run" onclick="api('convert')" disabled>4. 변환 시작</button>
 
         <div class="section" style="margin-top:20px;">
-            <strong>5. 실시간 변환 리포트</strong>
+            <strong>5. 변환 결과 리포트</strong>
             <table id="result-table">
-                <thead><tr><th>파일명</th><th>상태</th><th>상세 결과</th></tr></thead>
-                <tbody><tr><td colspan="3" style="text-align:center; color:#999;">작업 대기 중</td></tr></tbody>
+                <thead><tr><th>파일명</th><th>상태</th><th>메시지</th></tr></thead>
+                <tbody><tr><td colspan="3" style="text-align:center;">대기 중</td></tr></tbody>
             </table>
         </div>
     </div>
@@ -82,47 +78,92 @@
             if(document.getElementById('pw').value === "sd*11070823") {
                 document.getElementById('login').classList.add('hidden');
                 document.getElementById('app').classList.remove('hidden');
-            } else { alert("비밀번호가 틀립니다."); }
+            } else { alert("비밀번호 오류"); }
         }
 
         function downloadBridge() {
+            // 줄바꿈과 구조를 완벽히 유지한 멀티라인 문자열
             const psCode = `$OutputEncoding = [System.Text.Encoding]::UTF8
-$l = New-Object System.Net.HttpListener; $l.Prefixes.Add("http://localhost:8080/"); try { $l.Start() } catch { Write-Host "오류: 8080 포트 충돌" -ForegroundColor Red; exit }
-$sPath = ""; $dPath = ""
+$listener = New-Object System.Net.HttpListener
+$listener.Prefixes.Add("http://localhost:8080/")
+try {
+    $listener.Start()
+} catch {
+    Write-Host "오류: 8080 포트가 사용 중입니다." -ForegroundColor Red
+    exit
+}
+
+$srcPath = ""
+$dstPath = ""
 Write-Host ""
-Write-Host ">>> 로컬 엔진 가동 중 (웹 화면에서 조작하세요) <<<" -ForegroundColor Cyan
-while ($l.IsListening) {
-    $ctx = $l.GetContext(); $res = $ctx.Response; $res.Headers.Add("Access-Control-Allow-Origin", "*")
-    $url = $ctx.Request.Url.AbsolutePath; $buf = [System.Text.Encoding]::UTF8.GetBytes("{}")
+Write-Host ">>> 로컬 엔진 가동 중 (창을 닫지 마세요) <<<" -ForegroundColor Cyan
+
+while ($listener.IsListening) {
+    $context = $listener.GetContext()
+    $res = $context.Response
+    $res.Headers.Add("Access-Control-Allow-Origin", "*")
+    $url = $context.Request.Url.AbsolutePath
+    $buffer = [System.Text.Encoding]::UTF8.GetBytes("{}")
+
     if ($url -eq "/select-source") {
-        Add-Type -AssemblyName System.Windows.Forms; $f = New-Object System.Windows.Forms.FolderBrowserDialog
-        if ($f.ShowDialog() -eq "OK") { $sPath = $f.SelectedPath; $fs = Get-ChildItem -LiteralPath $sPath -Include *.ppt,*.pptx,*.hwp,*.hwpx -File | Select-Object -ExpandProperty Name; $buf = [System.Text.Encoding]::UTF8.GetBytes(@{path=$sPath;files=$fs}|ConvertTo-Json) }
-    } elseif ($url -eq "/select-dest") {
-        $f = New-Object System.Windows.Forms.FolderBrowserDialog; if ($f.ShowDialog() -eq "OK") { $dPath = $f.SelectedPath; $buf = [System.Text.Encoding]::UTF8.GetBytes(@{path=$dPath}|ConvertTo-Json) }
-    } elseif ($url -eq "/convert") {
-        $pp = New-Object -ComObject PowerPoint.Application; $hwp = New-Object -ComObject HWPFrame.HwpObject; $results = @()
-        Get-ChildItem -LiteralPath $sPath -Include *.ppt,*.pptx,*.hwp,*.hwpx -File | % {
-            try {
-                $out = Join-Path $dPath ([System.IO.Path]::ChangeExtension($_.Name, ".pdf"))
-                if ($_.Extension -match "ppt") { $p = $pp.Presentations.Open($_.FullName, -1, 0, 0); $p.SaveAs($out, 32); $p.Close() }
-                else { $hwp.Open($_.FullName, "HWP", "forceopen:true"); $hwp.SaveAs($out, "PDF"); $hwp.Clear(1) }
-                $results += @{ name=$_.Name; status="성공"; msg="변환 완료" }
-            } catch { $results += @{ name=$_.Name; status="실패"; msg=$_.Exception.Message } }
-        }; $pp.Quit(); $hwp.Quit(); $buf = [System.Text.Encoding]::UTF8.GetBytes(($results | ConvertTo-Json))
+        Add-Type -AssemblyName System.Windows.Forms
+        $f = New-Object System.Windows.Forms.FolderBrowserDialog
+        if ($f.ShowDialog() -eq "OK") {
+            $srcPath = $f.SelectedPath
+            $files = Get-ChildItem -LiteralPath $srcPath -Include *.ppt, *.pptx, *.hwp, *.hwpx -File | Select-Object -ExpandProperty Name
+            $json = @{ path = $srcPath; files = $files } | ConvertTo-Json
+            $buffer = [System.Text.Encoding]::UTF8.GetBytes($json)
+        }
     }
-    $res.ContentType = "application/json; charset=utf-8"; $res.OutputStream.Write($buf, 0, $buf.Length); $res.Close()
+    elseif ($url -eq "/select-dest") {
+        $f = New-Object System.Windows.Forms.FolderBrowserDialog
+        if ($f.ShowDialog() -eq "OK") {
+            $dstPath = $f.SelectedPath
+            $json = @{ path = $dstPath } | ConvertTo-Json
+            $buffer = [System.Text.Encoding]::UTF8.GetBytes($json)
+        }
+    }
+    elseif ($url -eq "/convert") {
+        $pp = New-Object -ComObject PowerPoint.Application
+        $hwp = New-Object -ComObject HWPFrame.HwpObject
+        $results = @()
+        $items = Get-ChildItem -LiteralPath $srcPath -Include *.ppt, *.pptx, *.hwp, *.hwpx -File
+        foreach ($item in $items) {
+            try {
+                $outPath = [System.IO.Path]::Combine($dstPath, [System.IO.Path]::ChangeExtension($item.Name, ".pdf"))
+                if ($item.Extension -match "ppt") {
+                    $p = $pp.Presentations.Open($item.FullName, -1, 0, 0)
+                    $p.SaveAs($outPath, 32)
+                    $p.Close()
+                } else {
+                    $hwp.Open($item.FullName, "HWP", "forceopen:true")
+                    $hwp.SaveAs($outPath, "PDF")
+                    $hwp.Clear(1)
+                }
+                $results += @{ name = $item.Name; status = "성공"; msg = "완료" }
+            } catch {
+                $results += @{ name = $item.Name; status = "실패"; msg = $_.Exception.Message }
+            }
+        }
+        $pp.Quit(); $hwp.Quit()
+        $buffer = [System.Text.Encoding]::UTF8.GetBytes(($results | ConvertTo-Json))
+    }
+    $res.ContentType = "application/json; charset=utf-8"
+    $res.OutputStream.Write($buffer, 0, $buffer.Length)
+    $res.Close()
 }`;
             const blob = new Blob(["\ufeff", psCode], { type: 'text/plain;charset=utf-8' });
-            saveFile(blob, "Bridge_Server.ps1");
+            save(blob, "Bridge_Server.ps1");
         }
 
         function downloadBatch() {
-            const batCode = `@echo off\npushd "%~dp0"\necho 로컬 엔진을 시작합니다...\npowershell -NoExit -ExecutionPolicy Bypass -File "Bridge_Server.ps1"\npause`;
-            const blob = new Blob([batCode], { type: 'text/plain' });
-            saveFile(blob, "서버실행.bat");
+            // 배치 파일 명령어의 무결성 확보
+            const batCode = `@echo off\r\npushd "%~dp0"\r\npowershell -NoExit -ExecutionPolicy Bypass -File "Bridge_Server.ps1"\r\npause`;
+            const blob = new Blob([batCode], { type: 'application/octet-stream' });
+            save(blob, "서버실행.bat");
         }
 
-        function saveFile(blob, name) {
+        function save(blob, name) {
             const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; a.click();
         }
 
@@ -132,20 +173,20 @@ while ($l.IsListening) {
                 const data = await res.json();
                 if(endpoint === 'select-source') {
                     document.getElementById('src-path').innerText = data.path;
-                    document.getElementById('file-count').innerText = `대상 파일 리스트: ${data.files.length}건`;
+                    document.getElementById('file-count').innerText = `대상 파일: ${data.files.length}건`;
                     document.getElementById('file-display').innerHTML = data.files.join('<br>');
                     if(data.files.length > 0) document.getElementById('run-btn').disabled = false;
                 } else if(endpoint === 'select-dest') {
                     document.getElementById('dst-path').innerText = data.path;
                 } else if(endpoint === 'convert') {
-                    renderResults(data);
+                    renderTable(data);
                 }
-            } catch { alert("로컬 엔진 연결 실패! 가이드에 따라 '서버실행.bat' 실행 및 브라우저 보안 설정을 확인하세요."); }
+            } catch { alert("엔진 연결 실패! 가이드 2, 3번을 다시 확인하세요."); }
         }
 
-        function renderResults(results) {
-            const tbody = document.querySelector("#result-table tbody");
-            tbody.innerHTML = results.map(r => `<tr><td>${r.name}</td><td class="${r.status === '성공' ? 'status-success' : 'status-fail'}">${r.status}</td><td>${r.msg}</td></tr>`).join('');
+        function renderTable(res) {
+            const body = document.querySelector("#result-table tbody");
+            body.innerHTML = res.map(r => `<tr><td>${r.name}</td><td class="${r.status==='성공'?'status-success':'status-fail'}">${r.status}</td><td>${r.msg}</td></tr>`).join('');
         }
     </script>
 </body>
