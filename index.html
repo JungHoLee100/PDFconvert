@@ -2,93 +2,123 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>Enterprise Document Standardizer</title>
+    <title>Enterprise Doc Converter - 표준화 센터</title>
     <style>
-        :root { --primary: #0078d4; --success: #107c10; --error: #d13438; }
-        body { font-family: 'Segoe UI', sans-serif; background: #f3f2f1; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 450px; text-align: center; }
-        h2 { color: var(--primary); margin-bottom: 20px; }
-        input[type="password"] { width: 100%; padding: 12px; margin-bottom: 20px; border: 1px solid #ced4da; border-radius: 6px; box-sizing: border-box; }
-        button { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 1rem; }
-        button:hover { background: #005a9e; }
-        .guide { text-align: left; font-size: 0.85rem; color: #666; margin-top: 20px; line-height: 1.5; }
+        :root { --primary: #0078d4; --bg: #f3f2f1; --white: #ffffff; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 20px; }
+        .container { max-width: 900px; margin: auto; background: var(--white); padding: 30px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .header { border-bottom: 2px solid var(--primary); margin-bottom: 20px; padding-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .section { margin-bottom: 25px; padding: 15px; border: 1px solid #e1dfdd; border-radius: 8px; }
+        .btn { padding: 10px 20px; background: var(--primary); color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .btn-download { background: #5c2d91; }
+        .btn-run { background: #107c10; width: 100%; font-size: 1.2rem; margin-top: 10px; }
+        .file-list { max-height: 200px; overflow-y: auto; background: #faf9f8; padding: 10px; border: 1px solid #edebe9; border-radius: 4px; font-size: 0.9rem; margin-top: 10px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { padding: 10px; border: 1px solid #edebe9; text-align: left; }
+        th { background: #f3f2f1; }
+        .status-success { color: #107c10; font-weight: bold; }
+        .status-fail { color: #a4262c; font-weight: bold; }
         .hidden { display: none; }
-        .step-tag { background: #dff6dd; color: var(--success); padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; }
     </style>
 </head>
 <body>
-    <div id="auth-box" class="card">
-        <h2>🔒 시스템 인증</h2>
-        <input type="password" id="pw" placeholder="비밀번호 입력">
-        <button onclick="login()">인증 및 시스템 접속</button>
+    <div id="login" class="container" style="max-width: 400px; margin-top: 100px; text-align: center;">
+        <h2>🔐 시스템 접속</h2>
+        <input type="password" id="pw" style="width:100%; padding:12px; margin:20px 0; border:1px solid #ddd; border-radius:6px;" placeholder="비밀번호 입력">
+        <button class="btn" style="width:100%" onclick="checkAuth()">인증 및 대시보드 진입</button>
     </div>
 
-    <div id="main-box" class="card hidden">
-        <span class="step-tag">Ready to Convert</span>
-        <h2>🚀 문서 변환 시스템</h2>
-        <p style="font-size: 0.9rem; color: #444;">아래 버튼을 클릭하여 변환 엔진을 실행하세요.</p>
-        <button onclick="downloadEngine()">변환 엔진 다운로드</button>
-        <div class="guide">
-            <strong>📋 실행 프로세스 (5대 요구사항 반영)</strong>
-            <ol>
-                <li>다운로드된 파일을 실행합니다.</li>
-                <li>화면에 뜨는 <strong>폴더 선택창</strong>에서 변환할 폴더를 선택합니다.</li>
-                <li>저장될 폴더를 선택하면 <strong>PPT/HWP 일괄 변환</strong>이 시작됩니다.</li>
-                <li>작업 완료 후 <strong>성공/실패 리포트 창</strong>이 유지됩니다.</li>
-            </ol>
+    <div id="app" class="container hidden">
+        <div class="header">
+            <h2>🚀 문서 변환 통합 제어 센터</h2>
+            <button class="btn btn-download" onclick="downloadBridge()">1. 엔진(Bridge) 다운로드</button>
+        </div>
+
+        <div class="section">
+            <strong>2. 변환 환경 설정</strong>
+            <div style="margin: 15px 0;">
+                <button class="btn" onclick="api('select-source')">원본 폴더 선택</button>
+                <span id="src-path" style="margin-left:10px; color:#666;">(미선택)</span>
+            </div>
+            <div id="file-count" style="font-weight:bold; margin-bottom:5px;">대상 파일 리스트:</div>
+            <div class="file-list" id="file-display">폴더를 선택하면 리스트가 출력됩니다.</div>
+            
+            <div style="margin: 20px 0 10px 0;">
+                <button class="btn" onclick="api('select-dest')">저장 폴더 선택</button>
+                <span id="dst-path" style="margin-left:10px; color:#666;">(미선택)</span>
+            </div>
+        </div>
+
+        <button id="run-btn" class="btn btn-run" onclick="api('convert')" disabled>3. 변환 작업 실행</button>
+
+        <div class="section" style="margin-top:20px;">
+            <strong>4. 실시간 변환 리포트</strong>
+            <table id="result-table">
+                <thead><tr><th>파일명</th><th>상태</th><th>상세결과</th></tr></thead>
+                <tbody><tr><td colspan="3" style="text-align:center; color:#999;">작업 대기 중</td></tr></tbody>
+            </table>
         </div>
     </div>
 
     <script>
-        const MASTER_KEY = "sd*11070823";
+        const API_URL = "http://localhost:8080";
 
-        function login() {
-            if(document.getElementById('pw').value === MASTER_KEY) {
-                document.getElementById('auth-box').classList.add('hidden');
-                document.getElementById('main-box').classList.remove('hidden');
-            } else { alert("비밀번호가 올바르지 않습니다."); }
+        function checkAuth() {
+            if(document.getElementById('pw').value === "sd*11070823") {
+                document.getElementById('login').classList.add('hidden');
+                document.getElementById('app').classList.remove('hidden');
+            } else { alert("비밀번호가 일치하지 않습니다."); }
         }
 
-        function downloadEngine() {
-            const psScript = `
-Add-Type -AssemblyName System.Windows.Forms
-$f=New-Object System.Windows.Forms.FolderBrowserDialog
-
-# 2~3. 폴더 선택 (UI)
-$f.Description = '변환할 원본 폴더를 선택하세요 (PPT, HWP)'; if($f.ShowDialog() -ne 'OK'){exit}; $in=$f.SelectedPath
-$f.Description = 'PDF를 저장할 폴더를 선택하세요'; if($f.ShowDialog() -ne 'OK'){exit}; $out=$f.SelectedPath
-
-# 1. 엔진 기동
-$pp=New-Object -ComObject PowerPoint.Application; $hwp=New-Object -ComObject HWPFrame.HwpObject; $res=@()
-
-# 4. 변환 실행
-$files = Get-ChildItem -LiteralPath $in -Include *.ppt,*.pptx,*.hwp,*.hwpx -File
-foreach($file in $files){
-    try {
-        $save=Join-Path $out ([System.IO.Path]::ChangeExtension($file.Name, '.pdf'))
-        if($file.Extension -like '*ppt*'){
-            $p=$pp.Presentations.Open($file.FullName,-1,0,0); $p.SaveAs($save,32); $p.Close()
-        } elseif($file.Extension -like '*hwp*'){
-            $hwp.Open($file.FullName,'HWP','forceopen:true'); $hwp.SaveAs($save,'PDF'); $hwp.Clear(1)
-        }
-        $res += [PSCustomObject]@{파일명=$file.Name; 결과='성공'; 메시지='PDF 변환 완료'}
-    } catch {
-        $res += [PSCustomObject]@{파일명=$file.Name; 결과='실패'; 메시지=$_.Exception.Message}
+        // 브릿지 엔진(PowerShell)을 즉석에서 생성하여 다운로드
+        function downloadBridge() {
+            const psCode = `# Bridge Server for Doc Converter
+$l = New-Object System.Net.HttpListener; $l.Prefixes.Add("http://localhost:8080/"); $l.Start()
+$s=""; $d=""
+Write-Host ">>> 로컬 엔진 가동 중 (웹 화면에서 조작하세요) <<<" -ForegroundColor Cyan
+while($l.IsListening){
+    $c=$l.GetContext(); $res=$c.Response; $res.Headers.Add("Access-Control-Allow-Origin","*")
+    $url=$c.Request.Url.AbsolutePath; $buf=[System.Text.Encoding]::UTF8.GetBytes("{}")
+    if($url -eq "/select-source"){
+        Add-Type -AssemblyName System.Windows.Forms; $f=New-Object System.Windows.Forms.FolderBrowserDialog
+        if($f.ShowDialog() -eq "OK"){$s=$f.SelectedPath; $fs=Get-ChildItem -LiteralPath $s -Include *.ppt,*.pptx,*.hwp,*.hwpx -File | Select-Object -ExpandProperty Name; $buf=[System.Text.Encoding]::UTF8.GetBytes(@{path=$s;files=$fs}|ConvertTo-Json)}
+    }elseif($url -eq "/select-dest"){
+        $f=New-Object System.Windows.Forms.FolderBrowserDialog; if($f.ShowDialog() -eq "OK"){$d=$f.SelectedPath; $buf=[System.Text.Encoding]::UTF8.GetBytes(@{path=$d}|ConvertTo-Json)}
+    }elseif($url -eq "/convert"){
+        $p=New-Object -ComObject PowerPoint.Application; $h=New-Object -ComObject HWPFrame.HwpObject; $rs=@()
+        Get-ChildItem -LiteralPath $s -Include *.ppt,*.pptx,*.hwp,*.hwpx -File | %{
+            try{$o=Join-Path $d ([System.IO.Path]::ChangeExtension($_.Name,".pdf")); if($_.Extension -match "ppt"){$m=$p.Presentations.Open($_.FullName,-1,0,0); $m.SaveAs($o,32); $m.Close()}else{$h.Open($_.FullName,"HWP","forceopen:true"); $h.SaveAs($o,"PDF"); $h.Clear(1)} $rs+=@{name=$_.Name;status="성공";msg="변환완료"}}
+            catch{$rs+=@{name=$_.Name;status="실패";msg=$_.Exception.Message}}
+        }; $p.Quit(); $h.Quit(); $buf=[System.Text.Encoding]::UTF8.GetBytes(($rs|ConvertTo-Json))
     }
-}
-$pp.Quit(); $hwp.Quit()
-
-# 5. 결과 리포트 출력 (창 유지)
-$res | Out-GridView -Title '변환 성공/실패 결과 리포트'
-Write-Host '모든 작업이 완료되었습니다. 창을 닫으려면 아무 키나 누르세요.' -ForegroundColor Yellow
-Read-Host
-`;
-            const batContent = `@echo off\npowershell -NoProfile -ExecutionPolicy Bypass -Command "${psScript.replace(/"/g, '"""').replace(/\n/g, ' ')}"\npause`;
-            const blob = new Blob([batContent], { type: 'text/plain' });
+    $res.ContentType="application/json; charset=utf-8"; $res.OutputStream.Write($buf,0,$buf.Length); $res.Close()
+}`;
+            const blob = new Blob([psCode], { type: 'text/plain' });
             const a = document.createElement('a');
             a.href = URL.createObjectURL(blob);
-            a.download = "DocumentConverter_Pro.bat";
+            a.download = "Bridge_Server.ps1";
             a.click();
+        }
+
+        async function api(endpoint) {
+            try {
+                const res = await fetch(`${API_URL}/${endpoint}`);
+                const data = await res.json();
+                if(endpoint === 'select-source') {
+                    document.getElementById('src-path').innerText = data.path;
+                    document.getElementById('file-display').innerHTML = data.files.join('<br>');
+                    if(data.files.length > 0) document.getElementById('run-btn').disabled = false;
+                } else if(endpoint === 'select-dest') {
+                    document.getElementById('dst-path').innerText = data.path;
+                } else if(endpoint === 'convert') {
+                    renderResults(data);
+                }
+            } catch { alert("로컬 엔진이 실행되지 않았습니다. 1번 버튼으로 다운로드 후 실행하세요."); }
+        }
+
+        function renderResults(results) {
+            const tbody = document.querySelector("#result-table tbody");
+            tbody.innerHTML = results.map(r => `<tr><td>${r.name}</td><td class="${r.status === '성공' ? 'status-success' : 'status-fail'}">${r.status}</td><td>${r.msg}</td></tr>`).join('');
         }
     </script>
 </body>
