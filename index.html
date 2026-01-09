@@ -2,17 +2,17 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>Enterprise Doc Converter - 표준화 센터</title>
+    <title>상품시스템 산출물 표준화 센터</title>
     <style>
         :root { --primary: #0078d4; --bg: #f3f2f1; --white: #ffffff; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 20px; }
+        body { font-family: 'Segoe UI', 'Malgun Gothic', sans-serif; background: var(--bg); margin: 0; padding: 20px; }
         .container { max-width: 900px; margin: auto; background: var(--white); padding: 30px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
         .header { border-bottom: 2px solid var(--primary); margin-bottom: 20px; padding-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
         .section { margin-bottom: 25px; padding: 15px; border: 1px solid #e1dfdd; border-radius: 8px; }
         .btn { padding: 10px 20px; background: var(--primary); color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
         .btn-download { background: #5c2d91; }
         .btn-run { background: #107c10; width: 100%; font-size: 1.2rem; margin-top: 10px; }
-        .btn-run:disabled { background: #c8c6c4; }
+        .btn-run:disabled { background: #c8c6c4; cursor: not-allowed; }
         .file-list { max-height: 200px; overflow-y: auto; background: #faf9f8; padding: 10px; border: 1px solid #edebe9; border-radius: 4px; font-size: 0.9rem; margin-top: 10px; line-height: 1.6; }
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         th, td { padding: 12px; border: 1px solid #edebe9; text-align: left; }
@@ -71,15 +71,18 @@
             } else { alert("비밀번호가 일치하지 않습니다."); }
         }
 
+        // [수정됨] 인코딩 문제를 해결한 다운로드 함수
         function downloadBridge() {
-            // 가독성을 위해 줄바꿈이 포함된 깨끗한 스크립트 생성
             const psCode = `# Bridge Server for Doc Converter
+$OutputEncoding = [System.Text.Encoding]::UTF8
 $listener = New-Object System.Net.HttpListener
 $listener.Prefixes.Add("http://localhost:8080/")
 try { $listener.Start() } catch { Write-Host "오류: 8080 포트가 이미 사용 중입니다." -ForegroundColor Red; exit }
 
 $srcPath = ""; $dstPath = ""
+Write-Host ""
 Write-Host ">>> 로컬 엔진 가동 중 (웹 화면에서 조작하세요) <<<" -ForegroundColor Cyan
+Write-Host ">>> 엔드포인트: http://localhost:8080" -ForegroundColor Gray
 
 while ($listener.IsListening) {
     $context = $listener.GetContext()
@@ -132,9 +135,9 @@ while ($listener.IsListening) {
     $res.ContentType = "application/json; charset=utf-8"
     $res.OutputStream.Write($buffer, 0, $buffer.Length)
     $res.Close()
-}
-`;
-            const blob = new Blob([psCode], { type: 'text/plain' });
+}`;
+            // \ufeff (BOM) 추가하여 UTF-8 한글 깨짐 방지
+            const blob = new Blob(["\ufeff", psCode], { type: 'text/plain;charset=utf-8' });
             const a = document.createElement('a');
             a.href = URL.createObjectURL(blob);
             a.download = "Bridge_Server.ps1";
