@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>Enterprise Doc Standardizer v1.7</title>
+    <title>Enterprise Doc Standardizer v1.8</title>
     <style>
         :root { --primary: #0078d4; --bg: #f3f2f1; --white: #ffffff; }
         body { font-family: 'Segoe UI', 'Malgun Gothic', sans-serif; background: var(--bg); padding: 20px; margin: 0; }
@@ -29,7 +29,7 @@
 
     <div id="app" class="container hidden">
         <div class="header">
-            <h2>🚀 문서 통합 변환 센터 (v1.7)</h2>
+            <h2>🚀 문서 통합 변환 센터 (v1.8)</h2>
             <div>
                 <button class="btn btn-download" onclick="downloadBridge()">1. 엔진(.ps1)</button>
                 <button class="btn btn-download" onclick="downloadBatch()">2. 실행기(.bat)</button>
@@ -37,10 +37,10 @@
         </div>
 
         <div class="path-box">
-            <strong>📂 업데이트 필수 가이드</strong><br>
-            • GitHub 수정 후, 위 버튼을 눌러 <b>새 엔진 파일을 다운로드</b> 하세요.<br>
-            • <code>C:\ppt_work</code> 폴더의 기존 <b>Bridge_Server.ps1</b>을 반드시 교체해야 합니다.<br>
-            • 6종 문서(PPTX, DOCX, HWPX 등) 외 파일은 완벽하게 스킵합니다.
+            <strong>📂 전문가용 표준 가이드</strong><br>
+            • <b>환경:</b> GitHub에서 다운로드한 파일을 <code>C:\ppt_work</code>에 위치시키세요.<br>
+            • <b>기능:</b> 비문서 파일(엔진, 폴더 등)은 자동으로 <b>완벽하게 Skip</b> 처리됩니다.<br>
+            • <b>주의:</b> 엔진 가동 시 '포트 충돌'이 뜨면 열려있는 파워쉘 창을 모두 닫고 재시작하세요.
         </div>
 
         <button id="run-btn" class="btn btn-run" onclick="runConversion()">변환 작업 실행 (PDF 생성)</button>
@@ -66,11 +66,11 @@
             const ps = [
                 "$OutputEncoding = [System.Text.Encoding]::UTF8",
                 "$l = New-Object System.Net.HttpListener; $l.Prefixes.Add('http://localhost:8080/')",
-                "try { $l.Start() } catch { Write-Host '[오류] 8080 포트 충돌' -ForegroundColor Red; exit }",
+                "try { $l.Start() } catch { Write-Host '`n[오류] 8080 포트가 사용 중입니다. 기존 창을 닫으세요.' -ForegroundColor Red; exit }",
                 "$s = 'C:\\ppt_work'; $d = 'C:\\ppt_work\\pdf'",
                 "if (!(Test-Path $d)) { New-Item -ItemType Directory -Path $d | Out-Null }",
                 "Write-Host '`n==========================================' -ForegroundColor Cyan",
-                "Write-Host '>>> 문서 변환 엔진 v1.7 가동 중 <<<' -ForegroundColor Cyan",
+                "Write-Host '>>> 문서 변환 엔진 v1.8 정상 가동 중 <<<' -ForegroundColor Cyan",
                 "Write-Host '==========================================' -ForegroundColor Cyan",
                 "while($l.IsListening) {",
                 "  $c = $l.GetContext(); $res = $c.Response; $res.Headers.Add('Access-Control-Allow-Origin','*')",
@@ -79,7 +79,7 @@
                 "    $rs = @()",
                 "    $items = Get-ChildItem -LiteralPath $s -File | Where-Object { $_.Extension -match 'ppt|pptx|doc|docx|hwp|hwpx' }",
                 "    if($items.Count -gt 0) {",
-                "       Write-Host \"  -> 총 $($items.Count)개의 대상 파일 발견\" -ForegroundColor White",
+                "       Write-Host \"  -> 총 $($items.Count)개의 문서 발견\" -ForegroundColor White",
                 "       $pp = New-Object -ComObject PowerPoint.Application; $wd = New-Object -ComObject Word.Application; $hwp = New-Object -ComObject HWPFrame.HwpObject",
                 "       foreach($i in $items) {",
                 "         try {",
@@ -101,12 +101,10 @@
                 "       }",
                 "       $pp.Quit(); $wd.Quit(); $hwp.Quit()",
                 "    } else { Write-Host '  ! 알림: 변환 대상 파일이 없습니다.' -ForegroundColor Magenta }",
-                "    # [에러 해결 핵심] $json이 절대 null이 되지 않도록 강제 배열 처리",
                 "    $json = @($rs) | ConvertTo-Json",
                 "    if ($null -eq $json -or $json -eq '') { $json = '[]' }",
                 "    $buf = [System.Text.Encoding]::UTF8.GetBytes($json)",
-                "    $res.ContentType='application/json; charset=utf-8'",
-                "    $res.OutputStream.Write($buf, 0, $buf.Length)",
+                "    $res.ContentType='application/json; charset=utf-8'; $res.OutputStream.Write($buf, 0, $buf.Length)",
                 "    Write-Host '[응답 전송] 웹 화면으로 결과 전송 완료.' -ForegroundColor Cyan",
                 "  }",
                 "  $res.Close()",
@@ -116,7 +114,7 @@
         }
 
         function downloadBatch() {
-            const bat = "@echo off\r\nchcp 65001 > nul\r\npowershell -NoExit -ExecutionPolicy Bypass -File \"Bridge_Server.ps1\"";
+            const bat = "@echo off\r\nchcp 65001 > nul\r\npushd \"%~dp0\"\r\npowershell -NoExit -ExecutionPolicy Bypass -File \"Bridge_Server.ps1\"";
             saveBlob(new Blob([bat], { type: 'application/octet-stream' }), "서버실행.bat");
         }
 
@@ -128,7 +126,7 @@
             const btn = document.getElementById('run-btn');
             const tbody = document.querySelector("#result-table tbody");
             btn.disabled = true;
-            tbody.innerHTML = "<tr><td colspan='3' style='text-align:center;'>🔄 변환 진행 중... (PowerShell 창을 확인하세요)</td></tr>";
+            tbody.innerHTML = "<tr><td colspan='3' style='text-align:center;'>🔄 변환 진행 중... (PowerShell 창에서 색상별 로그를 확인하세요)</td></tr>";
 
             try {
                 const res = await fetch(`${API_URL}/convert`);
@@ -140,7 +138,7 @@
                     tbody.innerHTML = list.map(r => `<tr><td>${r.name}</td><td class="${r.status==='성공'?'status-success':'status-fail'}">${r.status}</td><td>${r.msg}</td></tr>`).join('');
                 }
             } catch (e) {
-                tbody.innerHTML = "<tr><td colspan='3' style='text-align:center; color:red;'>⚠️ 엔진 응답 오류.</td></tr>";
+                tbody.innerHTML = "<tr><td colspan='3' style='text-align:center; color:red;'>⚠️ 엔진 응답 오류. (PowerShell 확인 필요)</td></tr>";
             } finally {
                 btn.disabled = false;
             }
