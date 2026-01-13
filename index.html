@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>Enterprise Doc Standardizer v1.6</title>
+    <title>Enterprise Doc Standardizer v1.7</title>
     <style>
         :root { --primary: #0078d4; --bg: #f3f2f1; --white: #ffffff; }
         body { font-family: 'Segoe UI', 'Malgun Gothic', sans-serif; background: var(--bg); padding: 20px; margin: 0; }
@@ -29,7 +29,7 @@
 
     <div id="app" class="container hidden">
         <div class="header">
-            <h2>🚀 문서 통합 변환 센터 (v1.6)</h2>
+            <h2>🚀 문서 통합 변환 센터 (v1.7)</h2>
             <div>
                 <button class="btn btn-download" onclick="downloadBridge()">1. 엔진(.ps1)</button>
                 <button class="btn btn-download" onclick="downloadBatch()">2. 실행기(.bat)</button>
@@ -37,22 +37,18 @@
         </div>
 
         <div class="path-box">
-            <strong>📂 시스템 무결성 가이드</strong><br>
-            • <b>필터링:</b> 하위 폴더 및 엔진/실행기 파일은 자동으로 <b>완벽하게 Skip</b>합니다.<br>
-            • <b>에러 방지:</b> 대상 파일이 없어도 시스템이 멈추지 않고 안전하게 대기합니다.<br>
-            • <b>색상 가이드:</b> 노란색(수신), 초록색(성공), 빨간색(실패)으로 상태를 표시합니다.
+            <strong>📂 업데이트 필수 가이드</strong><br>
+            • GitHub 수정 후, 위 버튼을 눌러 <b>새 엔진 파일을 다운로드</b> 하세요.<br>
+            • <code>C:\ppt_work</code> 폴더의 기존 <b>Bridge_Server.ps1</b>을 반드시 교체해야 합니다.<br>
+            • 6종 문서(PPTX, DOCX, HWPX 등) 외 파일은 완벽하게 스킵합니다.
         </div>
 
         <button id="run-btn" class="btn btn-run" onclick="runConversion()">변환 작업 실행 (PDF 생성)</button>
 
         <div style="font-weight: bold; margin-bottom: 10px;">📊 실시간 변환 리포트</div>
         <table id="result-table">
-            <thead>
-                <tr><th>파일명</th><th>상태</th><th>상세 결과</th></tr>
-            </thead>
-            <tbody>
-                <tr><td colspan="3" style="text-align:center; color:#999;">작업 대기 중...</td></tr>
-            </tbody>
+            <thead><tr><th>파일명</th><th>상태</th><th>상세 결과</th></tr></thead>
+            <tbody><tr><td colspan="3" style="text-align:center; color:#999;">작업 대기 중...</td></tr></tbody>
         </table>
     </div>
 
@@ -74,14 +70,13 @@
                 "$s = 'C:\\ppt_work'; $d = 'C:\\ppt_work\\pdf'",
                 "if (!(Test-Path $d)) { New-Item -ItemType Directory -Path $d | Out-Null }",
                 "Write-Host '`n==========================================' -ForegroundColor Cyan",
-                "Write-Host '>>> 문서 변환 엔진 정상 가동 중 <<<' -ForegroundColor Cyan",
+                "Write-Host '>>> 문서 변환 엔진 v1.7 가동 중 <<<' -ForegroundColor Cyan",
                 "Write-Host '==========================================' -ForegroundColor Cyan",
                 "while($l.IsListening) {",
                 "  $c = $l.GetContext(); $res = $c.Response; $res.Headers.Add('Access-Control-Allow-Origin','*')",
                 "  if($c.Request.Url.AbsolutePath -eq '/convert') {",
                 "    Write-Host \"`n[신호 수신] 변환 요청 ($((Get-Date).ToString('HH:mm:ss')))\" -ForegroundColor Yellow",
                 "    $rs = @()",
-                "    # 파일 및 확장자 필터링 (폴더 제외)",
                 "    $items = Get-ChildItem -LiteralPath $s -File | Where-Object { $_.Extension -match 'ppt|pptx|doc|docx|hwp|hwpx' }",
                 "    if($items.Count -gt 0) {",
                 "       Write-Host \"  -> 총 $($items.Count)개의 대상 파일 발견\" -ForegroundColor White",
@@ -106,13 +101,13 @@
                 "       }",
                 "       $pp.Quit(); $wd.Quit(); $hwp.Quit()",
                 "    } else { Write-Host '  ! 알림: 변환 대상 파일이 없습니다.' -ForegroundColor Magenta }",
-                "    # 결과 전송 무결성 보장",
+                "    # [에러 해결 핵심] $json이 절대 null이 되지 않도록 강제 배열 처리",
                 "    $json = @($rs) | ConvertTo-Json",
                 "    if ($null -eq $json -or $json -eq '') { $json = '[]' }",
                 "    $buf = [System.Text.Encoding]::UTF8.GetBytes($json)",
                 "    $res.ContentType='application/json; charset=utf-8'",
                 "    $res.OutputStream.Write($buf, 0, $buf.Length)",
-                "    Write-Host '[응답 전송] 웹 리포트 갱신 완료.' -ForegroundColor Cyan",
+                "    Write-Host '[응답 전송] 웹 화면으로 결과 전송 완료.' -ForegroundColor Cyan",
                 "  }",
                 "  $res.Close()",
                 "}"
@@ -139,18 +134,13 @@
                 const res = await fetch(`${API_URL}/convert`);
                 const data = await res.json();
                 const list = Array.isArray(data) ? data : (data ? [data] : []);
-                
                 if (list.length === 0) {
                     tbody.innerHTML = "<tr><td colspan='3' style='text-align:center;'>대상 문서 파일이 없습니다.</td></tr>";
                 } else {
-                    tbody.innerHTML = list.map(r => `<tr>
-                        <td>${r.name}</td>
-                        <td class="${r.status === '성공' ? 'status-success' : 'status-fail'}">${r.status}</td>
-                        <td>${r.msg}</td>
-                    </tr>`).join('');
+                    tbody.innerHTML = list.map(r => `<tr><td>${r.name}</td><td class="${r.status==='성공'?'status-success':'status-fail'}">${r.status}</td><td>${r.msg}</td></tr>`).join('');
                 }
             } catch (e) {
-                tbody.innerHTML = "<tr><td colspan='3' style='text-align:center; color:red;'>⚠️ 엔진 응답 오류 (PowerShell 확인 필요)</td></tr>";
+                tbody.innerHTML = "<tr><td colspan='3' style='text-align:center; color:red;'>⚠️ 엔진 응답 오류.</td></tr>";
             } finally {
                 btn.disabled = false;
             }
