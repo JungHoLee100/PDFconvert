@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>Enterprise Doc Standardizer v1.2</title>
+    <title>Enterprise Doc Standardizer v1.5</title>
     <style>
         :root { --primary: #0078d4; --bg: #f3f2f1; --white: #ffffff; }
         body { font-family: 'Segoe UI', 'Malgun Gothic', sans-serif; background: var(--bg); padding: 20px; margin: 0; }
@@ -18,8 +18,6 @@
         th { background: #f3f2f1; }
         .status-success { color: #107c10; font-weight: bold; }
         .status-fail { color: #a4262c; font-weight: bold; }
-        code { background: #eee; padding: 2px 5px; border-radius: 4px; color: #d13438; font-weight: bold; }
-        .hidden { display: none; }
     </style>
 </head>
 <body>
@@ -31,7 +29,7 @@
 
     <div id="app" class="container hidden">
         <div class="header">
-            <h2>🚀 문서 변환 자동화 센터 (v1.2)</h2>
+            <h2>🚀 문서 통합 변환 센터 (v1.5)</h2>
             <div>
                 <button class="btn btn-download" onclick="downloadBridge()">1. 엔진(.ps1)</button>
                 <button class="btn btn-download" onclick="downloadBatch()">2. 실행기(.bat)</button>
@@ -39,11 +37,10 @@
         </div>
 
         <div class="path-box">
-            <strong>📂 표준 작업 가이드</strong><br>
-            • 작업 환경: <code>C:\ppt_work</code> (엔진, 실행기 위치)<br>
-            • 지원 형식: <b>PPT(X), DOC(X), HWP(X)</b><br>
-            • 결과 폴더: <code>C:\ppt_work\pdf</code> (변환된 파일 저장)<br>
-            • <strong>자동 스킵:</strong> 지정된 문서 외 파일은 자동으로 제외됩니다.
+            <strong>📂 필터링 및 작업 안내</strong><br>
+            • <b>대상:</b> 6종 문서(PPTX, DOCX, HWPX 등) 전용 변환<br>
+            • <b>제외:</b> <b>폴더, 엔진(.ps1), 실행기(.bat)</b> 자동 스킵<br>
+            • <b>시각화:</b> 파워쉘 콘솔에서 상태별 색상 로그를 제공합니다.
         </div>
 
         <button id="run-btn" class="btn btn-run" onclick="runConversion()">변환 작업 실행 (PDF 생성)</button>
@@ -66,57 +63,53 @@
             if(document.getElementById('pw').value === "sd*11070823") {
                 document.getElementById('login').classList.add('hidden');
                 document.getElementById('app').classList.remove('hidden');
-            } else { alert("비밀번호가 일치하지 않습니다."); }
+            } else { alert("비밀번호 불일치"); }
         }
 
         function downloadBridge() {
             const ps = [
                 "$OutputEncoding = [System.Text.Encoding]::UTF8",
                 "$l = New-Object System.Net.HttpListener; $l.Prefixes.Add('http://localhost:8080/')",
-                "try { $l.Start() } catch { Write-Host '[오류] 8080 포트 충돌' -FG Red; exit }",
+                "try { $l.Start() } catch { Write-Host '[오류] 8080 포트 충돌' -ForegroundColor Red; exit }",
                 "$s = 'C:\\ppt_work'; $d = 'C:\\ppt_work\\pdf'",
                 "if (!(Test-Path $d)) { New-Item -ItemType Directory -Path $d | Out-Null }",
-                "Write-Host '`n==========================================' -FG Cyan",
-                "Write-Host '>>> 통합 문서 변환 엔진 가동 중 <<<' -FG Cyan",
-                "Write-Host '==========================================' -FG Cyan",
+                "Write-Host '`n==========================================' -ForegroundColor Cyan",
+                "Write-Host '>>> 통합 문서 변환 엔진 가동 중 <<<' -ForegroundColor Cyan",
+                "Write-Host '==========================================' -ForegroundColor Cyan",
                 "while($l.IsListening) {",
                 "  $c = $l.GetContext(); $res = $c.Response; $res.Headers.Add('Access-Control-Allow-Origin','*')",
                 "  if($c.Request.Url.AbsolutePath -eq '/convert') {",
-                "    Write-Host \"`n[신호 수신] 변환 요청 ($((Get-Date).ToString('HH:mm:ss')))\" -FG Yellow",
+                "    Write-Host \"`n[신호 수신] 변환 요청 ($((Get-Date).ToString('HH:mm:ss')))\" -ForegroundColor Yellow",
                 "    $rs = @()",
-                "    # [수정] 필터링 대상 확대: ppt, pptx, doc, docx, hwp, hwpx",
                 "    $items = Get-ChildItem -LiteralPath $s -File | Where-Object { $_.Extension -match 'ppt|pptx|doc|docx|hwp|hwpx' }",
                 "    if($items.Count -gt 0) {",
-                "       Write-Host \"  -> 총 $($items.Count)개 문서 파일 발견\" -FG White",
-                "       # COM 객체 초기화 (PPT, Word, HWP)",
-                "       $pp = New-Object -ComObject PowerPoint.Application",
-                "       $wd = New-Object -ComObject Word.Application",
-                "       $hwp = New-Object -ComObject HWPFrame.HwpObject",
+                "       Write-Host \"  -> 총 $($items.Count)개의 문서 발견\" -ForegroundColor White",
+                "       $pp = New-Object -ComObject PowerPoint.Application; $wd = New-Object -ComObject Word.Application; $hwp = New-Object -ComObject HWPFrame.HwpObject",
                 "       foreach($i in $items) {",
                 "         try {",
                 "           $o = [System.IO.Path]::Combine($d, [System.IO.Path]::ChangeExtension($i.Name, '.pdf'))",
+                "           Write-Host \"     [*] 진행 중: $($i.Name)\" -NoNewline",
                 "           if($i.Extension -match 'ppt') {",
                 "             $m=$pp.Presentations.Open($i.FullName,-1,0,0); $m.SaveAs($o,32); $m.Close()",
                 "           } elseif($i.Extension -match 'doc') {",
-                "             $doc=$wd.Documents.Open($i.FullName, $false, $true)",
-                "             $doc.ExportAsFixedFormat($o, 17) # 17 = wdExportFormatPDF",
-                "             $doc.Close(0) # 0 = wdDoNotSaveChanges",
+                "             $doc=$wd.Documents.Open($i.FullName, $false, $true); $doc.ExportAsFixedFormat($o, 17); $doc.Close(0)",
                 "           } else {",
                 "             $hwp.Open($i.FullName,'HWP','forceopen:true'); $hwp.SaveAs($o,'PDF'); $hwp.Clear(1)",
                 "           }",
                 "           $rs += @{name=$i.Name; status='성공'; msg='완료'}",
-                "           Write-Host \"     [완료] $($i.Name)\" -FG Gray",
+                "           Write-Host \" [완료]\" -ForegroundColor Green",
                 "         } catch {",
                 "           $rs += @{name=$i.Name; status='실패'; msg=$_.Exception.Message}",
-                "           Write-Host \"     [실패] $($i.Name)\" -FG Red",
+                "           Write-Host \" [실패]\" -ForegroundColor Red",
                 "         }",
                 "       }",
                 "       $pp.Quit(); $wd.Quit(); $hwp.Quit()",
-                "    } else { Write-Host '  ! 변환 대상 문서가 없습니다.' -FG Magenta }",
+                "    } else { Write-Host '  ! 변환 대상 문서가 없습니다.' -ForegroundColor Magenta }",
                 "    $json = @($rs) | ConvertTo-Json",
+                "    if ($null -eq $json) { $json = '[]' }",
                 "    $buf = [System.Text.Encoding]::UTF8.GetBytes($json)",
-                "    $res.ContentType='application/json; charset=utf-8'; $res.OutputStream.Write($buf,0,$buf.Length)",
-                "    Write-Host '[응답 전송] 웹 리포트 전송 완료.' -FG Cyan",
+                "    $res.ContentType='application/json; charset=utf-8'; $res.OutputStream.Write($buf, 0, $buf.Length)",
+                "    Write-Host '[응답 전송] 완료.' -ForegroundColor Cyan",
                 "  }",
                 "  $res.Close()",
                 "}"
@@ -125,7 +118,7 @@
         }
 
         function downloadBatch() {
-            const bat = "@echo off\r\nchcp 65001 > nul\r\npushd \"%~dp0\"\r\ntitle 문서 통합 변환기 실행기\r\necho 엔진을 가동합니다...\r\npowershell -NoExit -ExecutionPolicy Bypass -File \"Bridge_Server.ps1\"\r\npause";
+            const bat = "@echo off\r\nchcp 65001 > nul\r\npowershell -NoExit -ExecutionPolicy Bypass -File \"Bridge_Server.ps1\"";
             saveBlob(new Blob([bat], { type: 'application/octet-stream' }), "서버실행.bat");
         }
 
@@ -137,7 +130,7 @@
             const btn = document.getElementById('run-btn');
             const tbody = document.querySelector("#result-table tbody");
             btn.disabled = true;
-            tbody.innerHTML = "<tr><td colspan='3' style='text-align:center;'>🔄 변환 진행 중... (PPT/Word/HWP 순차 처리)</td></tr>";
+            tbody.innerHTML = "<tr><td colspan='3' style='text-align:center;'>🔄 변환 진행 중... (PowerShell 창에서 색상별 진행 상황을 확인하세요)</td></tr>";
 
             try {
                 const res = await fetch(`${API_URL}/convert`);
